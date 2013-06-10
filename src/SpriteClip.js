@@ -1,16 +1,16 @@
-    
+
     /**
         @constructor
         @param {HTMLElement} elem - The containing DOM node
         @param {Object} [options] - An object literal with properties that will override any default settings of same name
     */
     function SpriteClip (element, options) {
-        
+
         //Make sure we get a proper instance
         if(!(this instanceof SpriteClip)) {
             return new SpriteClip(element, options);
         }
-        
+
         //Save a reference to the dom element and jquery-wrapped dom element
         this.el = element;
         this.$el = $(element);
@@ -47,18 +47,18 @@
         @description    Autocomplete for events.
     */
     SpriteClip.Event = {
-        
+
         /**
             @property {String} ENTER_FRAME - Is dispatched just after the background-position of a clip is updated
         */
         ENTER_FRAME: "enterFrame",
-        
+
         /**
             @property {String} PLAYING - Is dispatched by each clip when it starts to play
                                          A special case is when a playing clip is told to play a different direction - then it will
                                          dispatch SpriteClip.Event.STOPPED followed by SpriteClip.Event.PLAYING
         */
-        
+
         PLAYING: "playing",
         /**
             @property {String} STOPPED - Is dispatched by each clip when it stops playing
@@ -69,7 +69,7 @@
     };
 
     SpriteClip.prototype = {
-        
+
         //Public - init stuff we are going to need as undefined for performance
         el: undefined,
         $el: undefined,
@@ -85,44 +85,44 @@
         _timeout: undefined,
         _frameToStopAt: undefined,
         _frames: [],
-        
+
         /*
-            
+
         */
         _settings: {
             /**
                 @property {Integer} totalFrames - Required - The number of frames the sprite and thereby the animation contains. All frames must be equally spaced in the sprite.
             */
             totalFrames: undefined,
-            
+
             /**
                 @property {Integer} [frameRate=30] - The framerate that the animation runs at - NB: cannot be altered after instantiation
             */
             frameRate: 30,
-            
+
             /**
                 @property {Number[]} - An array of frames to stop at - can be changed after instantiation with the stops method
             */
             stops: [],
-            
+
             /**
                 @property {String} [layout="horizontal"] - Must be either "horizontal" or "vertical" depending how the sprite sheet is laid out - Defaults to "horizontal"
             */
             layout: "horizontal",
-            
+
             /**
                 @property {Number} [frameWidth={Elements width}] - Optional - The width of each frame - Defaults to the width of the container plus padding minus border
             */
             frameWidth: undefined,
-            
+
             /**
                 @property {Number} [frameHeight={Elements height}] - Optional - The height of each frame- Defaults to the width of the container plus padding minus border
             */
             frameHeight: undefined
-            
+
         },
-        
-        
+
+
         /**
             @public
             @description                    Setter for the stops array - overrides this._settings.stops if passed
@@ -172,7 +172,7 @@
             this._showFrame(frame);
             this.stop();
         },
-        
+
 
         /**
             @public
@@ -187,7 +187,7 @@
             this._showFrame(frame);
             this.rewind();
         },
-        
+
 
         /**
             @public
@@ -199,8 +199,8 @@
             this._validateFrameInput(frame);
             this.play(frame, 1);
         },
-        
-        
+
+
         /**
             @public
             @description                    Rewinds to a given frame and stops
@@ -212,13 +212,13 @@
             this.play(frame, -1);
         },
 
-        
+
         /**
             @public
             @description                    Shows next frame
         */
         nextFrame: function () {
-            
+
             if (this.currentFrame < this.totalFrames) {
                 this.currentFrame += 1;
             } else {
@@ -226,14 +226,14 @@
             }
             this._showFrame(this.currentFrame);
         },
-        
-        
+
+
         /**
             @public
             @description                    Shows previous frame
         */
         prevFrame: function () {
-            
+
             if (this.currentFrame > 1) {
                 this.currentFrame -= 1;
             } else {
@@ -242,7 +242,7 @@
             this._showFrame(this.currentFrame);
         },
 
-        
+
         /**
             @public
             @description                            Plays or rewinds the clip
@@ -262,7 +262,7 @@
             //If eg. playToAndStop or rewindToAndStop was called, we need to know at what frame to stop at
             this._frameToStopAt = frameToStopAt;
             this.currentDirection = direction;
-            
+
             if (!this.isPlaying) {
                 TimeoutManager.register(this);
                 this.isPlaying = true;
@@ -272,8 +272,8 @@
             }
 
         },
-        
-        
+
+
         /**
             @public
             @description                    Plays the animation backwards
@@ -282,8 +282,8 @@
 
             this.play(undefined, -1);
         },
-        
-        
+
+
         /**
             @public
             @description                    Stops the clip by unregistering the it in the TimeoutManager
@@ -299,20 +299,20 @@
             }
 
         },
-        
-        
+
+
         /**
             @private
             @description                    Updates the UI and dispatches ENTER_FRAME
         */
         _showFrame: function (frame) {
-            
+
             this.$el.css("background-position", this._frames[frame - 1]);
 
             //Dispatch SpriteClipEvent.ENTER_FRAME and send along the instance in the payload
             this.$dispatcher.triggerHandler(SpriteClip.Event.ENTER_FRAME, this);
         },
-        
+
 
         /**
             @private
@@ -323,7 +323,7 @@
                                             Returns false if there is not a stop
         */
         _hasStopAt: function (frame) {
-            
+
             var i = this._settings.stops.length - 1;
             for ( ; i >= 0 ; --i) {
 
@@ -346,6 +346,7 @@
             var frames = [],
                 len = this.totalFrames,
                 frameWidth = this.frameWidth,
+                frameHeight = this.frameHeight,
                 currentPositions = (this.$el.css("background-position") || this.$el.css("backgroundPositionX") + " " + this.$el.css("backgroundPositionY")).split(" "),
                 i, x, y;
 
@@ -363,11 +364,11 @@
                 x = currentPositions[0];
 
                 for (i = 0; i < len; i++) {
-                    y = -i * frameWidth + "px";
+                    y = -i * frameHeight + "px";
                     frames.push(x + " " + y);
                 }
             }
-            
+
             return frames;
         },
 
@@ -378,7 +379,7 @@
             @description                    Validates that the passed frame is in bounds
         */
         _validateFrameInput: function (frame) {
-            
+
             if (typeof frame !== "number") {
                 throw new Error("Argument Error: argument \"frame\" must be a number.");
             }
